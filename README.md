@@ -39,7 +39,7 @@ xcodebuild -scheme PodcastPlayer \
   -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
-183 unit tests (Swift Testing) and 16 UI tests (XCUITest), 199 in total. **The
+191 unit tests (Swift Testing) and 17 UI tests (XCUITest), 208 in total. **The
 suite never touches the network** — the three feeds from the brief are checked
 in as fixtures alongside synthetic cases for malformed XML, missing fields,
 every duration format, and empty channels.
@@ -61,11 +61,20 @@ xcodebuild ... -only-testing:PodcastPlayerUITests/ScreenshotTour test
 
 ## Sample feeds
 
-- `https://feeds.megaphone.fm/la-cotorrisa`
-- `https://anchor.fm/s/7a186bc/podcast/rss`
-- `http://feeds.feedburner.com/GeekNights`
+The three from the brief:
 
-All three are offered as one-tap buttons on the first screen.
+- `https://feeds.megaphone.fm/la-cotorrisa` — La Cotorrisa (Español)
+- `https://anchor.fm/s/7a186bc/podcast/rss` — Instituto Claro (Português)
+- `http://feeds.feedburner.com/GeekNights` — Geek Nights (English)
+
+Plus three more, which between them cover both `itunes:duration` spellings seen
+in the wild and a fourth language:
+
+- `https://jovemnerd.com.br/feed-nerdcast/` — NerdCast (Português, 1,700+ episodes)
+- `https://feedpress.me/9to5machappyhour` — 9to5Mac Happy Hour (English)
+- `http://feeds.feedburner.com/radio-canada/aujourdhuilhistoire` — Aujourd'hui l'histoire (Français)
+
+All six are offered as one-tap buttons on the first screen.
 
 ## Architecture
 
@@ -84,7 +93,7 @@ Core/         Formatters, StateView, AsyncCachedImage, Glass/
 Three rules carry most of the weight:
 
 - **ViewModels depend only on `Domain` protocols.** Not on `URLSession`, not on
-  SwiftData, not on `AVPlayer`. That is why all 183 unit tests run against
+  SwiftData, not on `AVPlayer`. That is why all 191 unit tests run against
   hand-written fakes with no network, no database, and no audio hardware.
 - **`Data` types never escape `Data`.** SwiftData `@Model` classes and raw
   parser output are mapped to domain value types at the repository boundary, so

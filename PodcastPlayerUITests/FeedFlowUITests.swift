@@ -81,6 +81,100 @@ final class FeedFlowUITests: XCTestCase {
         XCTAssertFalse(app.buttons["state.retry"].exists)
     }
 
+    func testTheClearButtonEmptiesTheFieldAndDismissesAnyError() {
+        let app = launch()
+
+        let field = app.textFields["feed.urlField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+
+        // Absent until there is something to clear.
+        XCTAssertFalse(app.buttons["feed.clearField"].exists)
+
+        field.tap()
+        field.typeText("not a url")
+
+        let clear = app.buttons["feed.clearField"]
+        XCTAssertTrue(clear.waitForExistence(timeout: 3), "Clear button never appeared")
+
+        app.buttons["feed.submitButton"].tap()
+        XCTAssertTrue(app.staticTexts["state.errorTitle"].waitForExistence(timeout: 5))
+
+        clear.tap()
+
+        XCTAssertEqual(field.value as? String ?? "", "")
+        XCTAssertFalse(
+            app.staticTexts["state.errorTitle"].exists,
+            "The error about the deleted address is still on screen"
+        )
+        XCTAssertFalse(app.buttons["feed.clearField"].exists)
+    }
+
+    func testTappingAwayDismissesTheKeyboard() {
+        let app = launch()
+
+        let field = app.textFields["feed.urlField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("example.test")
+
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 5), "Keyboard never appeared")
+
+        // Somewhere empty, well clear of any control.
+        app.staticTexts["Add a podcast"].tap()
+
+        let gone = NSPredicate(format: "exists == false")
+        expectation(for: gone, evaluatedWith: app.keyboards.element)
+        waitForExpectations(timeout: 5)
+    }
+
+    func testClearingRecentAddressesAsksWithAnAlert() {
+        let app = launch()
+
+        // Load something so there is history to clear.
+        let field = app.textFields["feed.urlField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("https://example.test/feed.xml")
+        app.buttons["feed.submitButton"].tap()
+        XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 15))
+
+        let recent = app.staticTexts["Recent"]
+        if !recent.waitForExistence(timeout: 3) {
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            XCTAssertTrue(recent.waitForExistence(timeout: 5))
+        }
+
+        app.buttons["feed.clearHistory"].tap()
+
+        let alert = app.alerts["Clear recent addresses?"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5), "Expected an alert, not an action sheet")
+        XCTAssertTrue(alert.buttons["Cancel"].exists, "A destructive alert must offer a way out")
+
+        // Cancelling leaves the history alone.
+        alert.buttons["Cancel"].tap()
+        XCTAssertTrue(recent.exists)
+
+        app.buttons["feed.clearHistory"].tap()
+        app.alerts["Clear recent addresses?"].buttons["Clear"].tap()
+
+        let gone = NSPredicate(format: "exists == false")
+        expectation(for: gone, evaluatedWith: recent)
+        waitForExpectations(timeout: 5)
+    }
+
+    func testEverySampleFeedIsOffered() {
+        let app = launch()
+        XCTAssertTrue(app.textFields["feed.urlField"].waitForExistence(timeout: 10))
+
+        for name in ["La Cotorrisa", "Instituto Claro", "Geek Nights",
+                     "NerdCast", "9to5Mac Happy Hour", "Aujourd'hui l'histoire"] {
+            XCTAssertTrue(
+                app.buttons["feed.sample.\(name)"].exists,
+                "Sample feed \(name) is missing"
+            )
+        }
+    }
+
     func testASuccessfulLoadIsRememberedInHistory() {
         let app = launch()
         loadFeed(in: app)

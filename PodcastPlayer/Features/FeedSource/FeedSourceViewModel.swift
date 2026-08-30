@@ -55,6 +55,19 @@ final class FeedSourceViewModel {
         state = .idle
     }
 
+    /// Empties the field.
+    ///
+    /// Also dismisses a failure, because the error describes an address that
+    /// no longer exists — leaving it up would have the user reading a
+    /// complaint about text they just deleted. A load in flight is left alone;
+    /// clearing the field is not a cancel.
+    func clear() {
+        urlText = ""
+        if case .failed = state { state = .idle }
+    }
+
+    var canClear: Bool { !urlText.isEmpty }
+
     private func load(_ url: URL) async {
         pendingURL = url
         state = .loading

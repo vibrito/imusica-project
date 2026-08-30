@@ -23,13 +23,21 @@ struct FeedSourceView: View {
                 if !viewModel.history.isEmpty {
                     historySection
                 }
-                if viewModel.history.isEmpty, viewModel.state == .idle {
-                    samples
-                }
+                // Always offered, not just on an empty first launch. Gating
+                // these on an empty history made them a one-time thing the
+                // user could never get back to.
+                samples
             }
             .padding(20)
         }
         .softScrollEdges()
+        // Dragging the list puts the keyboard away, and so does a tap on any
+        // empty space. simultaneousGesture rather than onTapGesture, so the
+        // buttons underneath still receive their own taps.
+        .scrollDismissesKeyboard(.interactively)
+        .simultaneousGesture(
+            TapGesture().onEnded { fieldIsFocused = false }
+        )
         .navigationTitle("Podcasts")
         .task { await viewModel.loadHistory() }
         .onChange(of: viewModel.state) { _, state in
@@ -39,10 +47,13 @@ struct FeedSourceView: View {
                 viewModel.reset()
             }
         }
-        .confirmationDialog("Clear recent addresses?", isPresented: $showingClearHistory) {
+        .alert("Clear recent addresses?", isPresented: $showingClearHistory) {
+            Button("Cancel", role: .cancel) {}
             Button("Clear", role: .destructive) {
                 Task { await viewModel.clearHistory() }
             }
+        } message: {
+            Text("The list of addresses you've opened will be forgotten. Cached podcasts are not affected.")
         }
     }
 
@@ -62,29 +73,55 @@ struct FeedSourceView: View {
                 // renders in link blue here, which reads as tappable. It is
                 // hidden from VoiceOver — a raw URL is not a usable label, and
                 // the field carries its own.
-                ZStack(alignment: .leading) {
-                    if viewModel.urlText.isEmpty {
-                        Text(verbatim: "example.com/feed.xml")
-                            .foregroundStyle(.secondary)
-                            .allowsHitTesting(false)
-                            .accessibilityHidden(true)
-                    }
+                HStack(spacing: 6) {
+                    ZStack(alignment: .leading) {
+                        if viewModel.urlText.isEmpty {
+                            Text(verbatim: "example.com/feed.xml")
+                                .foregroundStyle(.secondary)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        }
 
-                    TextField("", text: $viewModel.urlText)
-                        .textFieldStyle(.plain)
-                        .foregroundStyle(.primary)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                        .submitLabel(.go)
-                        .focused($fieldIsFocused)
-                        .onSubmit { submit() }
-                        .accessibilityLabel("Podcast feed address")
-                        .accessibilityHint("Enter the address of a public podcast RSS feed")
-                        .accessibilityIdentifier("feed.urlField")
+                        TextField("", text: $viewModel.urlText)
+                            .textFieldStyle(.plain)
+                            .foregroundStyle(.primary)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                            .submitLabel(.go)
+                            .focused($fieldIsFocused)
+                            .onSubmit { submit() }
+                            .accessibilityLabel("Podcast feed address")
+                            .accessibilityHint("Enter the address of a public podcast RSS feed")
+                            .accessibilityIdentifier("feed.urlField")
+                    }
+                    .lineLimit(1)
+
+                    if viewModel.canClear {
+                        Button {
+                            viewModel.clear()
+                            // Keep the keyboard up: clearing is the start of
+                            // retyping, not the end of editing.
+                            fieldIsFocused = true
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                // Padding rather than a frame, so the target
+                                // stays comfortable without the glyph growing.
+                                .padding(.vertical, 12)
+                                .padding(.leading, 8)
+                                .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Clear address")
+                        .accessibilityIdentifier("feed.clearField")
+                        .transition(.opacity)
+                    }
                 }
-                .lineLimit(1)
-                .padding(.horizontal, 16)
+                .animation(.easeInOut(duration: 0.15), value: viewModel.canClear)
+                .padding(.leading, 16)
+                .padding(.trailing, 8)
                 .padding(.vertical, 14)
                 .glassCard(cornerRadius: 16)
 
@@ -198,10 +235,22 @@ struct FeedSourceView: View {
 
     // MARK: - Samples
 
-    private static let sampleFeeds: [(name: String, url: String)] = [
-        ("La Cotorrisa", "https://feeds.megaphone.fm/la-cotorrisa"),
-        ("Instituto Claro", "https://anchor.fm/s/7a186bc/podcast/rss"),
-        ("Geek Nights", "http://feeds.feedburner.com/GeekNights"),
+    /// Curated starting points. Not private, so a test can prove every one of
+    /// these addresses is actually usable — a typo here would only ever be
+    /// found by a reviewer tapping it.
+    static let sampleFeeds: [(name: String, detail: String, url: String)] = [
+        ("La Cotorrisa", "Comedy · Español",
+         "https://feeds.megaphone.fm/la-cotorrisa"),
+        ("Instituto Claro", "Education · Português",
+         "https://anchor.fm/s/7a186bc/podcast/rss"),
+        ("Geek Nights", "Technology · English",
+         "http://feeds.feedburner.com/GeekNights"),
+        ("NerdCast", "Jovem Nerd · Português",
+         "https://jovemnerd.com.br/feed-nerdcast/"),
+        ("9to5Mac Happy Hour", "Technology · English",
+         "https://feedpress.me/9to5machappyhour"),
+        ("Aujourd'hui l'histoire", "Radio-Canada · Français",
+         "http://feeds.feedburner.com/radio-canada/aujourdhuilhistoire"),
     ]
 
     private var samples: some View {
@@ -211,18 +260,25 @@ struct FeedSourceView: View {
 
             ForEach(Self.sampleFeeds, id: \.url) { sample in
                 Button {
+                    fieldIsFocused = false
                     viewModel.urlText = sample.url
                     submit()
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "waveform")
                             .foregroundStyle(.tint)
-                        Text(sample.name)
-                            .font(.body.weight(.medium))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(sample.name)
+                                .font(.body.weight(.medium))
+                            Text(sample.detail)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .multilineTextAlignment(.leading)
                         Spacer(minLength: 0)
                         Image(systemName: "arrow.up.right")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -230,6 +286,10 @@ struct FeedSourceView: View {
                 }
                 .buttonStyle(.plain)
                 .glassCard(cornerRadius: 16)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(sample.name), \(sample.detail)")
+                .accessibilityHint("Loads this podcast")
+                .accessibilityIdentifier("feed.sample.\(sample.name)")
             }
         }
     }

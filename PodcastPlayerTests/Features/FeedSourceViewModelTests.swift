@@ -205,6 +205,96 @@ struct FeedSourceViewModelTests {
         #expect(history.clearCallCount == 1)
     }
 
+    // MARK: - Offered samples
+
+    @Test("Every offered sample address survives normalisation")
+    func sampleFeedsAreUsableAddresses() {
+        for sample in FeedSourceView.sampleFeeds {
+            #expect(
+                FeedSourceViewModel.normalized(sample.url) != nil,
+                "Sample \(sample.name) has an unusable address: \(sample.url)"
+            )
+        }
+    }
+
+    @Test("Sample addresses are distinct")
+    func sampleFeedsAreDistinct() {
+        let urls = FeedSourceView.sampleFeeds.map(\.url)
+        #expect(Set(urls).count == urls.count, "Two samples point at the same feed")
+    }
+
+    @Test("Every sample is labelled")
+    func sampleFeedsAreLabelled() {
+        for sample in FeedSourceView.sampleFeeds {
+            #expect(!sample.name.isEmpty)
+            #expect(!sample.detail.isEmpty)
+        }
+    }
+
+    // MARK: - Clearing
+
+    @Test("The clear affordance appears only when there is text to clear")
+    func canClearOnlyWithText() {
+        let sut = FeedSourceViewModel(repository: FakeRepository(), history: FakeHistoryStore())
+        #expect(!sut.canClear)
+
+        sut.urlText = "https://example.test/feed.xml"
+        #expect(sut.canClear)
+    }
+
+    @Test("Clearing empties the field")
+    func clearEmptiesTheField() {
+        let sut = FeedSourceViewModel(repository: FakeRepository(), history: FakeHistoryStore())
+        sut.urlText = "https://example.test/feed.xml"
+
+        sut.clear()
+
+        #expect(sut.urlText.isEmpty)
+        #expect(!sut.canClear)
+    }
+
+    @Test("Clearing dismisses an error about the address just deleted")
+    func clearDismissesAStaleError() async {
+        let sut = FeedSourceViewModel(
+            repository: FakeRepository(result: .failure(.notFound)),
+            history: FakeHistoryStore()
+        )
+        sut.urlText = anyFeedURL.absoluteString
+        await sut.submit()
+        #expect(sut.state == .failed(.notFound))
+
+        sut.clear()
+
+        #expect(sut.state == .idle)
+    }
+
+    @Test("Clearing leaves a loaded podcast alone")
+    func clearDoesNotDiscardALoadedPodcast() async {
+        let sut = FeedSourceViewModel(
+            repository: FakeRepository(result: .success(samplePodcast)),
+            history: FakeHistoryStore()
+        )
+        sut.urlText = anyFeedURL.absoluteString
+        await sut.submit()
+
+        sut.clear()
+
+        // Clearing the field is not a cancel.
+        #expect(sut.state == .loaded(samplePodcast))
+        #expect(sut.urlText.isEmpty)
+    }
+
+    @Test("Clearing does not disable submit for a fresh address")
+    func clearThenTypeAgainCanSubmit() {
+        let sut = FeedSourceViewModel(repository: FakeRepository(), history: FakeHistoryStore())
+        sut.urlText = "https://example.test/feed.xml"
+        sut.clear()
+        #expect(!sut.canSubmit)
+
+        sut.urlText = "https://other.test/feed.xml"
+        #expect(sut.canSubmit)
+    }
+
     // MARK: - Submit affordance
 
     @Test("Submit is disabled until there is something to submit")
