@@ -18,7 +18,7 @@
 - ViewModels are `@MainActor @Observable`, depend only on `Domain` protocols, and expose one `ViewState<T>`.
 - SwiftData `@Model` types and raw parser output never leave `Data/`. Map to `Domain` structs at the repository boundary.
 - **No `try!`, no force-unwrap, no `fatalError`, no `as!` in app code.** Tests may force-unwrap fixtures.
-- No network in tests. Inject a fake `HTTPClient`. Inject a clock; never call `Date()` inside code under test.
+- No network in tests. Inject a fake `HTTPClient`. Inject a date provider; never call `Date()` inside code under test.
 - Every task ends green: `xcodebuild -scheme PodcastPlayer -destination 'platform=iOS Simulator,name=iPhone 17' test` passes before the commit.
 - Conventional Commits, one logical change per commit.
 - Accessibility identifiers on anything a UI test queries. Never query localized display strings.
@@ -36,7 +36,7 @@
 | `PodcastPlayer/Domain/Episode.swift` | `Episode` value type |
 | `PodcastPlayer/Domain/AppError.swift` | The one error type crossing layer boundaries |
 | `PodcastPlayer/Domain/ViewState.swift` | Shared screen state enum |
-| `PodcastPlayer/Domain/Protocols.swift` | `PodcastRepository`, `ImageLoading`, `AudioPlaying`, `FeedHistoryStore`, `CacheManaging`, `Clock` |
+| `PodcastPlayer/Domain/Protocols.swift` | `PodcastRepository`, `ImageLoading`, `AudioPlaying`, `FeedHistoryStore`, `CacheManaging`, `DateProviding` |
 | `PodcastPlayer/Data/Network/HTTPClient.swift` | `URLSession` wrapper, conditional GET, error mapping |
 | `PodcastPlayer/Data/Parsing/RSSFeedParser.swift` | `XMLParser` SAX delegate → `ParsedFeed` |
 | `PodcastPlayer/Data/Parsing/DurationParser.swift` | `itunes:duration` in all three formats |
@@ -196,9 +196,9 @@ struct CacheStatistics: Equatable, Sendable {
     let imageCacheBytes: Int64
 }
 
-protocol Clock: Sendable { var now: Date { get } }
-struct SystemClock: Clock { var now: Date { Date() } }
-struct FixedClock: Clock { let now: Date }
+protocol DateProviding: Sendable { var now: Date { get } }
+struct SystemDateProvider: DateProviding { var now: Date { Date() } }
+struct FixedDateProvider: DateProviding { let now: Date }
 ```
 
 - [ ] **Step 1: Write the failing test**
@@ -508,7 +508,7 @@ Tests use a `URLProtocol` subclass registered on an ephemeral `URLSessionConfigu
 - Test: `PodcastPlayerTests/Data/FeedCacheStoreTests.swift`
 
 **Interfaces:**
-- Consumes: `Podcast`, `Episode`, `Clock`.
+- Consumes: `Podcast`, `Episode`, `DateProviding`.
 - Produces:
 
 ```swift
@@ -684,16 +684,16 @@ The composition point: cache, network, and parser become one stale-while-revalid
 - Test: `PodcastPlayerTests/Data/PodcastRepositoryTests.swift`
 
 **Interfaces:**
-- Consumes: `HTTPClient`, `RSSFeedParser`, `FeedCacheStore`, `Clock`, `AppError`.
+- Consumes: `HTTPClient`, `RSSFeedParser`, `FeedCacheStore`, `DateProviding`, `AppError`.
 - Produces: `struct PodcastRepositoryImpl: PodcastRepository, CacheManaging` with
-  `init(client: HTTPClient, parser: RSSFeedParser, cache: FeedCacheStore, images: ImageCache, clock: Clock, ttl: TimeInterval = 3600)`
+  `init(client: HTTPClient, parser: RSSFeedParser, cache: FeedCacheStore, images: ImageCache, dates: DateProviding, ttl: TimeInterval = 3600)`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```swift
 @Test func freshCacheIsServedWithoutAnyNetworkCall() async throws {
     let client = FakeHTTPClient(result: .data(feedXML, .init(etag: nil, lastModified: nil)))
-    let sut = makeSUT(client: client, clock: FixedClock(now: t0), ttl: 3600)
+    let sut = makeSUT(client: client, dates: FixedDateProvider(now: t0), ttl: 3600)
     try await sut.cache.save(samplePodcast, headers: .init(etag: nil, lastModified: nil), at: t0)
     _ = try await sut.repository.podcast(for: feedURL, forceRefresh: false)
     #expect(client.requestCount == 0)
@@ -701,7 +701,7 @@ The composition point: cache, network, and parser become one stale-while-revalid
 
 @Test func expiredCacheTriggersConditionalRevalidation() async throws {
     let client = FakeHTTPClient(result: .notModified)
-    let sut = makeSUT(client: client, clock: FixedClock(now: t0.addingTimeInterval(7200)), ttl: 3600)
+    let sut = makeSUT(client: client, dates: FixedDateProvider(now: t0.addingTimeInterval(7200)), ttl: 3600)
     try await sut.cache.save(samplePodcast, headers: .init(etag: "\"v1\"", lastModified: nil), at: t0)
     let podcast = try await sut.repository.podcast(for: feedURL, forceRefresh: false)
     #expect(client.lastConditional?.etag == "\"v1\"")
@@ -710,7 +710,7 @@ The composition point: cache, network, and parser become one stale-while-revalid
 
 @Test func notModifiedResponseRefreshesTheTimestamp() async throws {
     let now = t0.addingTimeInterval(7200)
-    let sut = makeSUT(client: FakeHTTPClient(result: .notModified), clock: FixedClock(now: now), ttl: 3600)
+    let sut = makeSUT(client: FakeHTTPClient(result: .notModified), dates: FixedDateProvider(now: now), ttl: 3600)
     try await sut.cache.save(samplePodcast, headers: .init(etag: "\"v1\"", lastModified: nil), at: t0)
     _ = try await sut.repository.podcast(for: feedURL, forceRefresh: false)
     #expect(try await sut.cache.entry(for: feedURL)?.fetchedAt == now)
@@ -718,7 +718,7 @@ The composition point: cache, network, and parser become one stale-while-revalid
 
 @Test func changedFeedReplacesTheCache() async throws {
     let sut = makeSUT(client: FakeHTTPClient(result: .data(updatedFeedXML, .init(etag: "\"v2\"", lastModified: nil))),
-                      clock: FixedClock(now: t0.addingTimeInterval(7200)), ttl: 3600)
+                      dates: FixedDateProvider(now: t0.addingTimeInterval(7200)), ttl: 3600)
     try await sut.cache.save(samplePodcast, headers: .init(etag: "\"v1\"", lastModified: nil), at: t0)
     let podcast = try await sut.repository.podcast(for: feedURL, forceRefresh: false)
     #expect(podcast.episodes.count != samplePodcast.episodes.count)
@@ -727,13 +727,13 @@ The composition point: cache, network, and parser become one stale-while-revalid
 
 @Test func offlineWithCacheServesCacheInsteadOfFailing() async throws {
     let sut = makeSUT(client: FakeHTTPClient(error: .offline),
-                      clock: FixedClock(now: t0.addingTimeInterval(7200)), ttl: 3600)
+                      dates: FixedDateProvider(now: t0.addingTimeInterval(7200)), ttl: 3600)
     try await sut.cache.save(samplePodcast, headers: .init(etag: nil, lastModified: nil), at: t0)
     #expect(try await sut.repository.podcast(for: feedURL, forceRefresh: false) == samplePodcast)
 }
 
 @Test func offlineWithoutCachePropagatesTheError() async {
-    let sut = makeSUT(client: FakeHTTPClient(error: .offline), clock: FixedClock(now: t0), ttl: 3600)
+    let sut = makeSUT(client: FakeHTTPClient(error: .offline), dates: FixedDateProvider(now: t0), ttl: 3600)
     await #expect(throws: AppError.offline) {
         try await sut.repository.podcast(for: feedURL, forceRefresh: false)
     }
@@ -741,14 +741,14 @@ The composition point: cache, network, and parser become one stale-while-revalid
 
 @Test func forceRefreshBypassesAFreshCache() async throws {
     let client = FakeHTTPClient(result: .data(feedXML, .init(etag: nil, lastModified: nil)))
-    let sut = makeSUT(client: client, clock: FixedClock(now: t0), ttl: 3600)
+    let sut = makeSUT(client: client, dates: FixedDateProvider(now: t0), ttl: 3600)
     try await sut.cache.save(samplePodcast, headers: .init(etag: nil, lastModified: nil), at: t0)
     _ = try await sut.repository.podcast(for: feedURL, forceRefresh: true)
     #expect(client.requestCount == 1)
 }
 
 @Test func statisticsReportCachedFeedCount() async throws {
-    let sut = makeSUT(client: FakeHTTPClient(result: .notModified), clock: FixedClock(now: t0), ttl: 3600)
+    let sut = makeSUT(client: FakeHTTPClient(result: .notModified), dates: FixedDateProvider(now: t0), ttl: 3600)
     try await sut.cache.save(samplePodcast, headers: .init(etag: nil, lastModified: nil), at: t0)
     #expect(await sut.repository.statistics().cachedFeedCount == 1)
 }
@@ -768,27 +768,27 @@ The composition point: cache, network, and parser become one stale-while-revalid
 - Test: `PodcastPlayerTests/Data/FeedHistoryStoreTests.swift`
 
 **Interfaces:**
-- Consumes: `FeedHistoryStore`, `FeedHistoryItem`, `Clock`.
+- Consumes: `FeedHistoryStore`, `FeedHistoryItem`, `DateProviding`.
 - Produces: `@ModelActor actor FeedHistoryStoreImpl: FeedHistoryStore` plus `@Model final class FeedHistoryEntry`.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```swift
 @Test func recordsAndReturnsAURL() async {
-    let store = makeInMemoryHistory(clock: FixedClock(now: t0))
+    let store = makeInMemoryHistory(dates: FixedDateProvider(now: t0))
     await store.record(url: feedURL, title: "Show")
     #expect(await store.history().map(\.url) == [feedURL])
 }
 
 @Test func returnsMostRecentlyAccessedFirst() async {
-    let store = makeInMemoryHistory(clock: AdvancingClock(start: t0))
+    let store = makeInMemoryHistory(dates: AdvancingDateProvider(start: t0))
     await store.record(url: urlA, title: nil)
     await store.record(url: urlB, title: nil)
     #expect(await store.history().map(\.url) == [urlB, urlA])
 }
 
 @Test func rerecordingMovesAURLToTheTopWithoutDuplicating() async {
-    let store = makeInMemoryHistory(clock: AdvancingClock(start: t0))
+    let store = makeInMemoryHistory(dates: AdvancingDateProvider(start: t0))
     await store.record(url: urlA, title: nil)
     await store.record(url: urlB, title: nil)
     await store.record(url: urlA, title: "Now titled")
@@ -797,7 +797,7 @@ The composition point: cache, network, and parser become one stale-while-revalid
 }
 
 @Test func clearEmptiesHistory() async {
-    let store = makeInMemoryHistory(clock: FixedClock(now: t0))
+    let store = makeInMemoryHistory(dates: FixedDateProvider(now: t0))
     await store.record(url: feedURL, title: nil)
     await store.clear()
     #expect(await store.history().isEmpty)
