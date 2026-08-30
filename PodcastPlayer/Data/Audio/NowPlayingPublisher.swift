@@ -1,5 +1,6 @@
 import Foundation
 import MediaPlayer
+import UIKit
 
 /// Publishes what is playing to the lock screen, Control Center, and CarPlay.
 @MainActor
@@ -33,7 +34,7 @@ final class NowPlayingPublisher: NowPlayingPublishing {
         }
 
         if let artwork, let image = UIImage(data: artwork) {
-            info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            info[MPMediaItemPropertyArtwork] = Self.makeArtwork(image)
         }
 
         center.nowPlayingInfo = info
@@ -51,5 +52,17 @@ final class NowPlayingPublisher: NowPlayingPublishing {
 
     func clear() {
         center.nowPlayingInfo = nil
+    }
+
+    /// Builds the artwork wrapper outside main-actor isolation.
+    ///
+    /// MediaPlayer calls this request handler on a background queue. Creating
+    /// the closure inside a @MainActor method makes Swift 6 attach an isolation
+    /// assertion to it, which then traps the moment the system asks for
+    /// artwork — a hard crash, and only ever on feeds that actually have an
+    /// image. Reading an already-decoded UIImage concurrently is safe, so the
+    /// handler is deliberately nonisolated.
+    private nonisolated static func makeArtwork(_ image: UIImage) -> MPMediaItemArtwork {
+        MPMediaItemArtwork(boundsSize: image.size) { _ in image }
     }
 }
