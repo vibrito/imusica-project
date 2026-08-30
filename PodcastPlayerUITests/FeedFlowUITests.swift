@@ -86,10 +86,16 @@ final class FeedFlowUITests: XCTestCase {
         loadFeed(in: app)
 
         XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 10))
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        // At regular width the form stays on screen beside the podcast, so
+        // there is nothing to navigate back from.
+        let recent = app.staticTexts["Recent"]
+        if !recent.waitForExistence(timeout: 3) {
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+        }
 
         XCTAssertTrue(
-            app.staticTexts["Recent"].waitForExistence(timeout: 5),
+            recent.waitForExistence(timeout: 5),
             "History section never appeared after a successful load"
         )
     }
@@ -115,7 +121,7 @@ final class CacheUITests: XCTestCase {
         app.buttons["feed.submitButton"].tap()
         XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 10))
 
-        app.tabBars.buttons["Settings"].tap()
+        AccessibilityAuditTests.openSettings(in: app)
 
         let feedValue = app.staticTexts["settings.feedCacheValue"]
         XCTAssertTrue(feedValue.waitForExistence(timeout: 5))

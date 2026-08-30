@@ -7,19 +7,28 @@ struct EpisodeRow: View {
     let isCurrent: Bool
     let play: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// At accessibility sizes a two-line clamp cuts titles mid-word. The title
+    /// is the one thing a row exists to convey, so it wraps freely instead —
+    /// and the description, which is supporting detail, steps aside.
+    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
+
     var body: some View {
         Button(action: play) {
             HStack(alignment: .top, spacing: 12) {
                 AsyncCachedImage(url: episode.imageURL ?? fallbackImageURL, cornerRadius: 10)
-                    .frame(width: 56, height: 56)
+                    .frame(width: isAccessibilitySize ? 44 : 56,
+                           height: isAccessibilitySize ? 44 : 56)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(episode.title)
                         .font(.subheadline.weight(.semibold))
-                        .lineLimit(2)
+                        .lineLimit(isAccessibilitySize ? nil : 2)
+                        .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
 
-                    if let description = episode.description {
+                    if let description = episode.description, !isAccessibilitySize {
                         Text(description)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -33,8 +42,8 @@ struct EpisodeRow: View {
                         }
                         Text(Formatters.duration(episode.duration))
                     }
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 0)

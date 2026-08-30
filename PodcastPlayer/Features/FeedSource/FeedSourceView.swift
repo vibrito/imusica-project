@@ -59,12 +59,15 @@ struct FeedSourceView: View {
 
             HStack(spacing: 10) {
                 // The placeholder is drawn manually: the built-in prompt
-                // renders in link blue here, which reads as tappable.
+                // renders in link blue here, which reads as tappable. It is
+                // hidden from VoiceOver — a raw URL is not a usable label, and
+                // the field carries its own.
                 ZStack(alignment: .leading) {
                     if viewModel.urlText.isEmpty {
-                        Text(verbatim: "https://example.com/feed.xml")
-                            .foregroundStyle(.tertiary)
+                        Text(verbatim: "example.com/feed.xml")
+                            .foregroundStyle(.secondary)
                             .allowsHitTesting(false)
+                            .accessibilityHidden(true)
                     }
 
                     TextField("", text: $viewModel.urlText)
@@ -76,6 +79,8 @@ struct FeedSourceView: View {
                         .submitLabel(.go)
                         .focused($fieldIsFocused)
                         .onSubmit { submit() }
+                        .accessibilityLabel("Podcast feed address")
+                        .accessibilityHint("Enter the address of a public podcast RSS feed")
                         .accessibilityIdentifier("feed.urlField")
                 }
                 .lineLimit(1)
@@ -156,10 +161,11 @@ struct FeedSourceView: View {
                                 Text(item.title ?? item.url.host() ?? item.url.absoluteString)
                                     .font(.body.weight(.medium))
                                     .lineLimit(1)
-                                Text(item.url.absoluteString)
+                                Text(Self.compactAddress(item.url))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
+                                    .truncationMode(.middle)
                             }
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right")
@@ -177,6 +183,17 @@ struct FeedSourceView: View {
             }
             .accessibilityIdentifier("feed.historyList")
         }
+    }
+
+    /// A feed address short enough to read in a list row.
+    ///
+    /// The scheme is noise and the full path rarely fits, least of all in a
+    /// split-view sidebar. VoiceOver still gets the whole address from the
+    /// row's combined label.
+    static func compactAddress(_ url: URL) -> String {
+        let host = url.host() ?? url.absoluteString
+        let path = url.path()
+        return path.isEmpty || path == "/" ? host : host + path
     }
 
     // MARK: - Samples

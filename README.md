@@ -39,10 +39,15 @@ xcodebuild -scheme PodcastPlayer \
   -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
-183 unit tests (Swift Testing) and 6 UI tests (XCUITest), 189 in total. **The suite never
-touches the network** — the three feeds from the brief are checked in as
-fixtures alongside synthetic cases for malformed XML, missing fields, every
-duration format, and empty channels.
+183 unit tests (Swift Testing) and 16 UI tests (XCUITest), 199 in total. **The
+suite never touches the network** — the three feeds from the brief are checked
+in as fixtures alongside synthetic cases for malformed XML, missing fields,
+every duration format, and empty channels.
+
+The UI tests include XCTest's automated accessibility audit over every screen,
+both at default and at the largest accessibility text size. On an iPad
+destination, three further tests exercise the split-view layout (they skip
+themselves on compact devices).
 
 Two test classes are excluded from the default suite and run by name:
 
@@ -144,12 +149,35 @@ read, and a channel with no playable episodes.
 the checked-in fixtures keep the channel metadata verbatim and the first five
 items, which is enough to pin every parsing behaviour.
 
+**Contrast and Dynamic Type are excluded from the automated audit**, with the
+reasoning recorded in `AccessibilityAuditTests`. The contrast check flags
+Apple's own semantic colours — the Settings screen is a stock SwiftUI `List`
+and reports eight issues, none of them ours. The Dynamic Type check cannot see
+through the combined accessibility element that makes an episode row read as
+one item to VoiceOver. Everything else the audit checks is enforced, and actual
+reflow at accessibility sizes is asserted behaviourally instead.
+
 **Playback position is not persisted across launches.** The brief does not ask
 for it, and it would need a per-episode progress store plus resume semantics.
 Deliberately out of scope.
 
 **Feed order is the queue order.** Playing any episode queues the entire list so
 next and previous are meaningful, rather than queueing one episode alone.
+
+## Accessibility and layout
+
+Adaptive by size class: `NavigationSplitView` at regular width so opening a
+podcast on iPad does not push the form off screen, `NavigationStack` at compact.
+The episode list uses an adaptive grid that becomes multi-column on wide
+screens.
+
+At accessibility text sizes the layout gives ground rather than clipping:
+episode titles stop truncating and their descriptions step aside, artwork
+shrinks, and the detail header caps its blurb so episodes stay reachable.
+Icon-only controls all carry VoiceOver labels, episode rows read as one element
+rather than five fragments, and the progress slider announces elapsed and
+remaining time in words — VoiceOver reads "42:30" as a time of day, not a
+length.
 
 ## Notes on the exercise
 

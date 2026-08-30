@@ -4,6 +4,12 @@ import SwiftUI
 struct PodcastDetailView: View {
     @State private var viewModel: PodcastDetailViewModel
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// At accessibility sizes an unconstrained header fills the entire screen,
+    /// leaving no episode visible — the lazy grid never even materialises a
+    /// row. The header gives ground so the list stays reachable.
+    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
 
     init(viewModel: PodcastDetailViewModel) {
         _viewModel = State(initialValue: viewModel)
@@ -33,19 +39,20 @@ struct PodcastDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 16) {
                 AsyncCachedImage(url: podcast.imageURL, cornerRadius: 16)
-                    .frame(width: 132, height: 132)
+                    .frame(width: isAccessibilitySize ? 84 : 132,
+                           height: isAccessibilitySize ? 84 : 132)
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(podcast.title)
                         .font(.title2.weight(.bold))
-                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("detail.title")
 
                     if let author = podcast.author {
                         Text(author)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("detail.author")
                     }
 
@@ -60,7 +67,7 @@ struct PodcastDetailView: View {
 
                     Text("\(podcast.episodes.count) episodes")
                         .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -69,6 +76,10 @@ struct PodcastDetailView: View {
                 Text(description)
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                    // Capped at accessibility sizes so the show blurb cannot
+                    // push every episode below the fold. VoiceOver still reads
+                    // the full text.
+                    .lineLimit(isAccessibilitySize ? 4 : nil)
                     .accessibilityIdentifier("detail.description")
             }
         }

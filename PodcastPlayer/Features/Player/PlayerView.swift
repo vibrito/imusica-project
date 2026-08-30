@@ -50,20 +50,23 @@ struct PlayerView: View {
             Text(episode.title)
                 .font(.title3.weight(.semibold))
                 .multilineTextAlignment(.center)
-                .lineLimit(3)
+                // Left free to wrap and grow. A fixed line limit clips the
+                // title outright at accessibility text sizes.
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("player.title")
 
             if let podcast = viewModel.podcast {
                 Text(podcast.title)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("player.podcast")
 
                 if let author = podcast.author {
                     Text(author)
                         .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }

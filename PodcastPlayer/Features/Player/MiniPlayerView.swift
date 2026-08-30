@@ -31,7 +31,7 @@ struct MiniPlayerView: View {
 
                     if let podcast = viewModel.podcast {
                         Text(podcast.title)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
