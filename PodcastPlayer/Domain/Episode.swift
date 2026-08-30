@@ -5,7 +5,7 @@ import Foundation
 /// `audioURL` is non-optional by construction: an entry with no playable media
 /// is not an episode, and is dropped during parsing rather than represented
 /// here as a half-valid value.
-struct Episode: Equatable, Sendable, Identifiable {
+struct Episode: Hashable, Sendable, Identifiable {
     /// The feed's `guid`, falling back to the enclosure URL when absent.
     let id: String
 

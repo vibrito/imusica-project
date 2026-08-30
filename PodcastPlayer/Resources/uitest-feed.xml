@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exercises the fields the detail screen must show: author, categories,
+     episode artwork, HTML descriptions, and pubDate in RFC 822. -->
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Rich Metadata Show</title>
+    <link>https://example.test</link>
+    <description>&lt;p&gt;A show &amp;amp; its description.&lt;/p&gt;</description>
+    <itunes:author>Ada Lovelace</itunes:author>
+    <itunes:image href="https://example.test/cover.jpg"/>
+    <itunes:category text="Technology">
+      <itunes:category text="Software How-To"/>
+    </itunes:category>
+    <itunes:category text="Education"/>
+    <item>
+      <guid isPermaLink="false">episode-001</guid>
+      <title>The First Episode</title>
+      <description>&lt;p&gt;Line one.&lt;/p&gt;&lt;p&gt;Line two.&lt;/p&gt;</description>
+      <pubDate>Mon, 06 Jan 2025 10:00:00 +0000</pubDate>
+      <itunes:duration>00:45:00</itunes:duration>
+      <itunes:image href="https://example.test/ep1.jpg"/>
+      <enclosure url="https://example.test/ep1.mp3" length="4096" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid isPermaLink="false">episode-002</guid>
+      <title>The Second Episode</title>
+      <itunes:summary>Summary used when description is absent.</itunes:summary>
+      <pubDate>Mon, 13 Jan 2025 10:00:00 +0000</pubDate>
+      <itunes:duration>1800</itunes:duration>
+      <enclosure url="https://example.test/ep2.mp3" length="4096" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>

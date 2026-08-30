@@ -2,16 +2,24 @@ import SwiftUI
 
 @main
 struct PodcastPlayerApp: App {
+    @State private var environment: AppEnvironment
+
+    init() {
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("-uiTesting")
+
+        if isUITesting {
+            _environment = State(initialValue: .uiTesting())
+        } else {
+            // A corrupt or unopenable store must not stop the app launching.
+            // Falling back gives the user an app that forgets things, which
+            // beats one that will not start.
+            _environment = State(initialValue: (try? .live()) ?? .fallback())
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
-            // Replaced by RootView in Task 18, once AppEnvironment exists to
-            // inject. Kept deliberately trivial so the scaffold commit builds
-            // and runs on its own.
-            ContentUnavailableView(
-                "Podcast Player",
-                systemImage: "waveform",
-                description: Text("Scaffold in place.")
-            )
+            RootView(environment: environment)
         }
     }
 }

@@ -4,7 +4,7 @@ import Foundation
 ///
 /// This is a value type on purpose: it can be handed to a view, cached, and
 /// compared without any risk of shared mutable state.
-struct Podcast: Equatable, Sendable, Identifiable {
+struct Podcast: Hashable, Sendable, Identifiable {
     /// The feed URL doubles as identity — one feed is one podcast.
     var id: URL { feedURL }
 
