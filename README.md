@@ -1,26 +1,57 @@
 # Podcast Player
 
-A native iOS podcast player built from public RSS feeds.
+A native iOS podcast player built from public RSS feeds. Paste a feed address,
+browse the show, and play any episode — with background playback, lock screen
+controls, and caching for both feeds and artwork.
 
-Full write-up — architecture, screenshots, and trade-offs — lands with Task 21.
-Until then:
+Built for the exercise described in `Exercicio - Podcast.pdf`.
 
-- **Working agreement:** [`CLAUDE.md`](CLAUDE.md)
-- **Implementation plan:** [`docs/superpowers/plans/2026-08-30-podcast-player.md`](docs/superpowers/plans/2026-08-30-podcast-player.md)
-- **Original brief:** `Exercicio - Podcast.pdf`
+| Feed source | Podcast detail | Player | Settings |
+|---|---|---|---|
+| ![](docs/screenshots/1-feed-source.png) | ![](docs/screenshots/2-podcast-detail.png) | ![](docs/screenshots/3-player.png) | ![](docs/screenshots/5-settings.png) |
+
+The detail screenshot is the real La Cotorrisa feed from the brief.
 
 ## Requirements
 
-Xcode 26 or later, iOS 26 simulator or device. No package manager step — the
-project has zero third-party dependencies.
+Xcode 26 or later, iOS 26 simulator or device.
 
-## Build and test
+**No package manager step.** The app has zero third-party dependencies —
+everything is first-party Apple frameworks.
+
+## Build and run
 
 ```bash
-open PodcastPlayer.xcodeproj          # then ⌘R
+open PodcastPlayer.xcodeproj      # then ⌘R
+```
 
+Or from the command line:
+
+```bash
+xcodebuild -scheme PodcastPlayer \
+  -destination 'platform=iOS Simulator,name=iPhone 17' build
+```
+
+## Tests
+
+```bash
 xcodebuild -scheme PodcastPlayer \
   -destination 'platform=iOS Simulator,name=iPhone 17' test
+```
+
+183 unit tests (Swift Testing) and 6 UI tests (XCUITest), 189 in total. **The suite never
+touches the network** — the three feeds from the brief are checked in as
+fixtures alongside synthetic cases for malformed XML, missing fields, every
+duration format, and empty channels.
+
+Two test classes are excluded from the default suite and run by name:
+
+```bash
+# Loads a real public feed over the network and starts playback.
+xcodebuild ... -only-testing:PodcastPlayerUITests/LiveFeedSmokeTest test
+
+# Walks the app slowly so screenshots can be captured.
+xcodebuild ... -only-testing:PodcastPlayerUITests/ScreenshotTour test
 ```
 
 ## Sample feeds
@@ -28,3 +59,115 @@ xcodebuild -scheme PodcastPlayer \
 - `https://feeds.megaphone.fm/la-cotorrisa`
 - `https://anchor.fm/s/7a186bc/podcast/rss`
 - `http://feeds.feedburner.com/GeekNights`
+
+All three are offered as one-tap buttons on the first screen.
+
+## Architecture
+
+MVVM over a thin domain layer. Dependencies point inward: `Features` → `Domain`
+← `Data`, and **`Domain` imports nothing but `Foundation`.**
+
+```
+App/          PodcastPlayerApp, AppEnvironment (composition root), RootView
+Features/     FeedSource, PodcastDetail, Player, Settings   (View + ViewModel)
+Domain/       Podcast, Episode, AppError, ViewState + every boundary protocol
+Data/         HTTPClient, RSSFeedParser, PodcastRepository,
+              SwiftData stores, ImageCache, AudioPlayerService
+Core/         Formatters, StateView, AsyncCachedImage, Glass/
+```
+
+Three rules carry most of the weight:
+
+- **ViewModels depend only on `Domain` protocols.** Not on `URLSession`, not on
+  SwiftData, not on `AVPlayer`. That is why all 183 unit tests run against
+  hand-written fakes with no network, no database, and no audio hardware.
+- **`Data` types never escape `Data`.** SwiftData `@Model` classes and raw
+  parser output are mapped to domain value types at the repository boundary, so
+  the persistence choice stays replaceable.
+- **`AppEnvironment` is the only file that names a concrete type.** Everything
+  else sees protocols.
+
+Every screen exposes a single `ViewState<T>` (`idle/loading/loaded/empty/failed`)
+rendered by one shared `StateView`, so loading spinners, empty states, and
+error-with-retry look and behave identically everywhere.
+
+## Caching
+
+Both caches are clearable independently from Settings, because dumping a
+hundred megabytes of artwork is a different decision from forgetting which
+shows you follow.
+
+**RSS — stale-while-revalidate.** A cached feed renders immediately with no
+spinner. A conditional `GET` using the stored `ETag`/`Last-Modified` revalidates
+in the background; `304` keeps the cache and just refreshes the timestamp. TTL
+is one hour.
+
+**Images — two tiers.** `NSCache` in memory, SHA-256-keyed files on disk with
+LRU eviction against a 100 MB cap. Concurrent requests for the same URL are
+deduplicated, so a grid of episodes sharing one artwork fires a single download.
+
+The rule that matters most is the failure path: **any network or parse failure
+with a cached copy present serves that copy** rather than an error screen. The
+user asked for a podcast, we have a podcast, and refusing to show it because a
+background refresh failed would be technically correct and practically useless.
+That holds for pull-to-refresh too.
+
+## Error handling
+
+One `AppError` crosses every boundary. `URLError` and parse failures are
+translated in the data layer, so no transport type reaches a ViewModel. Every
+case carries a user-facing message and a recovery suggestion, and `isRetryable`
+decides whether a Retry button appears — offering one for a mistyped address
+just teaches people to distrust the button.
+
+There is no `try!`, no force-unwrap, and no `fatalError` in application code.
+
+## Assumptions and trade-offs
+
+**iOS 26 deploy target.** Liquid Glass (`.glassEffect`, `GlassEffectContainer`,
+`.tabViewBottomAccessory`) is iOS 26+. Supporting iOS 17 would mean wrapping
+every glass surface in `#available` with material fallbacks, roughly doubling
+the UI code. Every Liquid Glass call is confined to `Core/Glass/GlassStyles.swift`,
+so lowering the target means rewriting one file's bodies, not touching any view.
+
+**Arbitrary loads are permitted in ATS.** The brief's own Geek Nights feed is
+`http://`, and several podcast media CDNs are still HTTP-only. Blocking them
+would fail one of the three required sample feeds.
+
+**The parser is deliberately lenient.** Publishers omit fields constantly, and a
+feed missing an author is still perfectly listenable. Every optional field
+degrades to `nil`, and an item with no audio enclosure is skipped rather than
+allowed to fail a 700-episode feed. Only two things are fatal: XML we cannot
+read, and a channel with no playable episodes.
+
+**Reference feeds are truncated to five items each.** Full copies are 1.8 MB;
+the checked-in fixtures keep the channel metadata verbatim and the first five
+items, which is enough to pin every parsing behaviour.
+
+**Playback position is not persisted across launches.** The brief does not ask
+for it, and it would need a per-episode progress store plus resume semantics.
+Deliberately out of scope.
+
+**Feed order is the queue order.** Playing any episode queues the entire list so
+next and previous are meaningful, rather than queueing one episode alone.
+
+## Notes on the exercise
+
+`CLAUDE.md` records the working agreement — architecture rules, testing
+standards, and design constraints — settled before any code was written.
+`docs/superpowers/plans/` contains the implementation plan the commits follow.
+
+The commit history is intended to read as the build order: domain, then
+parsing, then caching, then the repository, then each screen. One logical
+change per commit.
+
+One bug is worth calling out, because it says something about the test
+strategy rather than the code. `MPMediaItemArtwork`'s request handler is
+invoked by MediaPlayer on a background queue; built inside a `@MainActor`
+method it carries an isolation assertion that traps with `SIGILL` the moment
+the system asks for artwork. Every fixture feed points its artwork at
+`example.test`, which never resolves — so artwork was always `nil`, the handler
+was never built, and **178 unit tests plus 6 UI tests all passed against a
+crash that fired on the very first real feed.** It was caught by adding a
+live-network smoke test, and is now pinned by a regression test that requests
+the image from a background thread.
