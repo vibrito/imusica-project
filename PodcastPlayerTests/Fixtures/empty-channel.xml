@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Structurally valid, but publishes nothing. Must surface as .noEpisodes
+     rather than .invalidFeed: the address is right, the show is just empty. -->
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Nothing Published Yet</title>
+    <link>https://example.test</link>
+    <description>A podcast with no episodes.</description>
+    <itunes:author>Somebody</itunes:author>
+  </channel>
+</rss>

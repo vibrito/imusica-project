@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A minimal but legal feed: no author, no itunes:image, no duration, no
+     description on the item, no explicit guid. Everything optional is absent,
+     and the feed must still produce playable episodes. -->
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Bare Minimum Podcast</title>
+    <link>https://example.test</link>
+    <image>
+      <url>https://example.test/channel-image.jpg</url>
+      <title>Bare Minimum Podcast</title>
+      <link>https://example.test</link>
+    </image>
+    <item>
+      <title>Episode without any optional metadata</title>
+      <enclosure url="https://example.test/episodes/1.mp3" length="1024" type="audio/mpeg"/>
+    </item>
+    <item>
+      <title>Episode that is not playable and must be dropped</title>
+      <description>No enclosure element, so there is nothing to play.</description>
+    </item>
+    <item>
+      <title>Second playable episode</title>
+      <enclosure url="https://example.test/episodes/2.mp3" length="2048" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>

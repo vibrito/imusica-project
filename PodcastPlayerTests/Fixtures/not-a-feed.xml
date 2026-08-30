@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Well-formed XML that is not a podcast feed. A user pasting a website URL
+     lands here, and must get "that isn't a podcast feed", not a parser crash. -->
+<html>
+  <head><title>Some Website</title></head>
+  <body><h1>Not a podcast</h1></body>
+</html>

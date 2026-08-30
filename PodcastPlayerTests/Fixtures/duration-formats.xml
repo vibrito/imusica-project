@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Every duration shape the Apple spec permits, plus the unparseable values
+     real feeds contain. Unparseable must degrade to nil, never drop the
+     episode. -->
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Duration Formats</title>
+    <link>https://example.test</link>
+    <itunes:image href="https://example.test/art.jpg"/>
+    <item>
+      <guid>hhmmss</guid>
+      <title>HH:MM:SS</title>
+      <itunes:duration>01:02:03</itunes:duration>
+      <enclosure url="https://example.test/1.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>mmss</guid>
+      <title>MM:SS</title>
+      <itunes:duration>42:30</itunes:duration>
+      <enclosure url="https://example.test/2.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>seconds</guid>
+      <title>Raw seconds</title>
+      <itunes:duration>3672</itunes:duration>
+      <enclosure url="https://example.test/3.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>garbage</guid>
+      <title>Unparseable duration</title>
+      <itunes:duration>not a duration</itunes:duration>
+      <enclosure url="https://example.test/4.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>absent</guid>
+      <title>No duration element at all</title>
+      <enclosure url="https://example.test/5.mp3" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>

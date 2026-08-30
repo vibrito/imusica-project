@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:googleplay="http://www.google.com/schemas/play-podcasts/1.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/" xmlns:podcast="https://podcastindex.org/namespace/1.0">
+  <channel>
+    <atom:link href="https://feeds.simplecast.com/xE9e0As4" rel="self" title="MP3 Audio" type="application/atom+xml"/>
+    <atom:link href="https://simplecast.superfeedr.com" rel="hub" xmlns="http://www.w3.org/2005/Atom"/>
+    <generator>https://simplecast.com</generator>
+    <title>La Cotorrisa</title>
+    <description>Ricardo Pérez y Slobotzky se ponen a cotorrear como siempre, pero ahora lo están grabando. Escúchalos todos los miércoles hablando de noticias extrañas, datos curiosos, anécdotas hilarantes y aliviana el ombligo de la semana. Nuevo episodio todos los miércoles y domingo</description>
+    <copyright>2024 La Cotorrisa Podcast</copyright>
+    <language>es</language>
+    <pubDate>Thu, 27 Aug 2026 02:00:00 +0000</pubDate>
+    <lastBuildDate>Thu, 27 Aug 2026 03:11:36 +0000</lastBuildDate>
+    <image>
+      <link>https://la-cotorrisa-e489d893.simplecast.com</link>
+      <title>La Cotorrisa</title>
+      <url>https://image.simplecastcdn.com/images/43e030c1-47d6-4bec-a801-424d24fbfa57/cd36657f-408b-47cc-8cd5-90c68648dd76/3000x3000/e30ccd9b8147d19a.jpeg?aid=rss_feed</url>
+    </image>
+    <link>https://la-cotorrisa-e489d893.simplecast.com</link>
+    <itunes:type>episodic</itunes:type>
+    <itunes:summary>Ricardo Pérez y Slobotzky se ponen a cotorrear como siempre, pero ahora lo están grabando. Escúchalos todos los miércoles hablando de noticias extrañas, datos curiosos, anécdotas hilarantes y aliviana el ombligo de la semana. Nuevo episodio todos los miércoles y domingo</itunes:summary>
+    <itunes:author>La Cotorrisa Podcast</itunes:author>
+    <itunes:explicit>true</itunes:explicit>
+    <itunes:image href="https://image.simplecastcdn.com/images/43e030c1-47d6-4bec-a801-424d24fbfa57/cd36657f-408b-47cc-8cd5-90c68648dd76/3000x3000/e30ccd9b8147d19a.jpeg?aid=rss_feed"/>
+    <itunes:new-feed-url>https://feeds.simplecast.com/xE9e0As4</itunes:new-feed-url>
+    <itunes:owner>
+      <itunes:name>La Cotorrisa Podcast</itunes:name>
+      <itunes:email>info@sonoromedia.com</itunes:email>
+    </itunes:owner>
+    <itunes:category text="Comedy"/>
+    <item>
+      <guid isPermaLink="false">7d3019e5-7a1c-4344-a06c-d3857db63d8a</guid>
+      <title>Anecdotario 388 - Adelantado FT. Coco Celis</title>
+      <description><![CDATA[ Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
+for information about our collection and use of personal data for
+advertising.
+]]></description>
+      <pubDate>Thu, 27 Aug 2026 02:00:00 +0000</pubDate>
+      <author>info@sonoromedia.com (La Cotorrisa Podcast)</author>
+      <link>https://la-cotorrisa-e489d893.simplecast.com/episodes/anecdotario-388-SQkMvY7v</link>
+      <enclosure length="116002522" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/pscrb.fm/rss/p/titlepl.us/redirect.mp3/SONORO/72/sonoro.simplecastaudio.com/43e030c1-47d6-4bec-a801-424d24fbfa57/episodes/2907992e-142d-41e9-95f0-69df6f032035/audio/128/default.mp3?aid=rss_feed&amp;awCollectionId=43e030c1-47d6-4bec-a801-424d24fbfa57&amp;awEpisodeId=2907992e-142d-41e9-95f0-69df6f032035&amp;feed=xE9e0As4"/>
+      <itunes:title>Anecdotario 388 - Adelantado FT. Coco Celis</itunes:title>
+      <itunes:author>La Cotorrisa Podcast</itunes:author>
+      <itunes:duration>01:59:03</itunes:duration>
+      <itunes:summary></itunes:summary>
+      <itunes:subtitle></itunes:subtitle>
+      <itunes:explicit>true</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>740</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">9dae2093-d553-4712-b09b-88328f42adae</guid>
+      <title>Anecdotario 366 - Me hice pasar por doctora de urgencias</title>
+      <description><![CDATA[ Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
+for information about our collection and use of personal data for
+advertising.
+]]></description>
+      <pubDate>Mon, 24 Aug 2026 14:20:03 +0000</pubDate>
+      <author>info@sonoromedia.com (La Cotorrisa Podcast)</author>
+      <link>https://la-cotorrisa-e489d893.simplecast.com/episodes/anecdotario-366-ob40XHjz</link>
+      <enclosure length="128102443" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/pscrb.fm/rss/p/titlepl.us/redirect.mp3/SONORO/72/sonoro.simplecastaudio.com/43e030c1-47d6-4bec-a801-424d24fbfa57/episodes/3b37eb55-e267-47c6-9396-d8ccf57050c1/audio/128/default.mp3?aid=rss_feed&amp;awCollectionId=43e030c1-47d6-4bec-a801-424d24fbfa57&amp;awEpisodeId=3b37eb55-e267-47c6-9396-d8ccf57050c1&amp;feed=xE9e0As4"/>
+      <itunes:title>Anecdotario 366 - Me hice pasar por doctora de urgencias</itunes:title>
+      <itunes:author>La Cotorrisa Podcast</itunes:author>
+      <itunes:duration>02:13:26</itunes:duration>
+      <itunes:summary></itunes:summary>
+      <itunes:subtitle></itunes:subtitle>
+      <itunes:explicit>true</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>739</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">76e385e5-ed0e-43e0-9349-204aa7215dd5</guid>
+      <title>Episodio 387 - Me gasté lo de los pañales en el casino</title>
+      <description><![CDATA[ Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
+for information about our collection and use of personal data for
+advertising.
+]]></description>
+      <pubDate>Thu, 20 Aug 2026 02:00:00 +0000</pubDate>
+      <author>info@sonoromedia.com (La Cotorrisa Podcast)</author>
+      <link>https://la-cotorrisa-e489d893.simplecast.com/episodes/episodio-387-TzBIIcIG</link>
+      <enclosure length="127694908" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/pscrb.fm/rss/p/titlepl.us/redirect.mp3/SONORO/72/sonoro.simplecastaudio.com/43e030c1-47d6-4bec-a801-424d24fbfa57/episodes/2d95680a-5c15-4173-9c1b-f6e8e476d9b6/audio/128/default.mp3?aid=rss_feed&amp;awCollectionId=43e030c1-47d6-4bec-a801-424d24fbfa57&amp;awEpisodeId=2d95680a-5c15-4173-9c1b-f6e8e476d9b6&amp;feed=xE9e0As4"/>
+      <itunes:title>Episodio 387 - Me gasté lo de los pañales en el casino</itunes:title>
+      <itunes:author>La Cotorrisa Podcast</itunes:author>
+      <itunes:duration>02:11:10</itunes:duration>
+      <itunes:summary></itunes:summary>
+      <itunes:subtitle></itunes:subtitle>
+      <itunes:explicit>true</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>738</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">18d4fc72-8ccb-4502-a23b-30fab7d2467e</guid>
+      <title>Anecdotario 365 - Batimovil Vs. Papamovil FT. Alex Fdz</title>
+      <description><![CDATA[ Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
+for information about our collection and use of personal data for
+advertising.
+]]></description>
+      <pubDate>Mon, 17 Aug 2026 03:20:30 +0000</pubDate>
+      <author>info@sonoromedia.com (La Cotorrisa Podcast)</author>
+      <link>https://la-cotorrisa-e489d893.simplecast.com/episodes/anecdotario-365-naZ_8n76</link>
+      <enclosure length="119273488" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/pscrb.fm/rss/p/titlepl.us/redirect.mp3/SONORO/72/sonoro.simplecastaudio.com/43e030c1-47d6-4bec-a801-424d24fbfa57/episodes/3484e024-a71b-466c-ae18-1ea3238c693e/audio/128/default.mp3?aid=rss_feed&amp;awCollectionId=43e030c1-47d6-4bec-a801-424d24fbfa57&amp;awEpisodeId=3484e024-a71b-466c-ae18-1ea3238c693e&amp;feed=xE9e0As4"/>
+      <itunes:title>Anecdotario 365 - Batimovil Vs. Papamovil FT. Alex Fdz</itunes:title>
+      <itunes:author>La Cotorrisa Podcast</itunes:author>
+      <itunes:duration>02:02:51</itunes:duration>
+      <itunes:summary></itunes:summary>
+      <itunes:subtitle></itunes:subtitle>
+      <itunes:explicit>true</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>737</itunes:episode>
+    </item>
+    <item>
+      <guid isPermaLink="false">788d4c09-03f8-4b2a-afcd-5aa79fa24b11</guid>
+      <title>Episodio 386 - Slobo sueña que se peina FT. Carlos Santos &amp; Daniel Sosa</title>
+      <description><![CDATA[ Hosted by Simplecast, an AdsWizz company. See https://pcm.adswizz.com
+for information about our collection and use of personal data for
+advertising.
+]]></description>
+      <pubDate>Thu, 13 Aug 2026 02:00:00 +0000</pubDate>
+      <author>info@sonoromedia.com (La Cotorrisa Podcast)</author>
+      <link>https://la-cotorrisa-e489d893.simplecast.com/episodes/episodio-386-utXqJDOY</link>
+      <enclosure length="141203196" type="audio/mpeg" url="https://dts.podtrac.com/redirect.mp3/pscrb.fm/rss/p/titlepl.us/redirect.mp3/SONORO/72/sonoro.simplecastaudio.com/43e030c1-47d6-4bec-a801-424d24fbfa57/episodes/fbb1e4c5-9aa7-427e-818b-3af2ab42ffb3/audio/128/default.mp3?aid=rss_feed&amp;awCollectionId=43e030c1-47d6-4bec-a801-424d24fbfa57&amp;awEpisodeId=fbb1e4c5-9aa7-427e-818b-3af2ab42ffb3&amp;feed=xE9e0As4"/>
+      <itunes:title>Episodio 386 - Slobo sueña que se peina FT. Carlos Santos &amp; Daniel Sosa</itunes:title>
+      <itunes:author>La Cotorrisa Podcast</itunes:author>
+      <itunes:duration>02:25:42</itunes:duration>
+      <itunes:summary></itunes:summary>
+      <itunes:subtitle></itunes:subtitle>
+      <itunes:explicit>true</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:episode>736</itunes:episode>
+    </item>
+  </channel>
+</rss>
