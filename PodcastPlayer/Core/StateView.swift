@@ -8,7 +8,7 @@ import SwiftUI
 struct StateView<T: Equatable, Content: View>: View {
     let state: ViewState<T>
     var retry: (() -> Void)?
-    var emptyMessage: String = "Nothing here yet"
+    var emptyMessage: LocalizedStringKey = "Nothing here yet"
     @ViewBuilder var content: (T) -> Content
 
     var body: some View {
@@ -32,7 +32,8 @@ struct StateView<T: Equatable, Content: View>: View {
 
         case .failed(let error):
             ContentUnavailableView {
-                Label(error.errorDescription ?? "Something went wrong", systemImage: "exclamationmark.triangle")
+                Label(error.errorDescription ?? String(localized: "Something went wrong"),
+                      systemImage: "exclamationmark.triangle")
                     .accessibilityIdentifier("state.errorTitle")
             } description: {
                 if let suggestion = error.recoverySuggestion {

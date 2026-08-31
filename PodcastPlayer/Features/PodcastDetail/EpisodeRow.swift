@@ -72,7 +72,7 @@ struct EpisodeRow: View {
         if let duration = episode.duration {
             parts.append(Formatters.spokenDuration(duration))
         }
-        if isCurrent { parts.append("Now playing") }
+        if isCurrent { parts.append(String(localized: "Now playing")) }
         return parts.joined(separator: ", ")
     }
 }

@@ -2,7 +2,8 @@
 
 A native iOS podcast player built from public RSS feeds. Paste a feed address,
 browse the show, and play any episode — with background playback, lock screen
-controls, and caching for both feeds and artwork.
+controls, caching for both feeds and artwork, and a fully localized interface
+in English and Portuguese.
 
 Built for the exercise described in `Exercicio - Podcast.pdf`.
 
@@ -39,7 +40,7 @@ xcodebuild -scheme PodcastPlayer \
   -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
-191 unit tests (Swift Testing) and 17 UI tests (XCUITest), 208 in total. **The
+191 unit tests (Swift Testing) and 21 UI tests (XCUITest), 212 in total. **The
 suite never touches the network** — the three feeds from the brief are checked
 in as fixtures alongside synthetic cases for malformed XML, missing fields,
 every duration format, and empty channels.
@@ -172,6 +173,27 @@ Deliberately out of scope.
 
 **Feed order is the queue order.** Playing any episode queues the entire list so
 next and previous are meaningful, rather than queueing one episode alone.
+
+## Localization
+
+The interface ships in **English and Brazilian Portuguese**, driven by a String
+Catalog (`Localizable.xcstrings`) with plural rules per language — `1 episódio`
+/ `2 episódios`, and so on.
+
+Domain error messages are localized too. Because `AppError` returns plain
+`String`s rather than SwiftUI views, they only translate if the domain layer
+routes them through `String(localized:)`, which it does. `LocalizationUITests`
+launches the app under `-AppleLanguages (pt-BR)` and asserts on the translated
+chrome, a translated error message, and a Portuguese plural — so a regression
+shows up as a failing test rather than an English string on a Brazilian phone.
+
+Worth recording, because it is easy to get wrong and silent when you do:
+`Text("literal")` localizes, but `Text(someString)` does not — the localizing
+initializer takes a `LocalizedStringKey`, and passing a `String` selects the
+verbatim overload instead. Settings passed its row labels and alert copy
+through `String` parameters and shipped untranslated until a Portuguese UI test
+caught it. Every UI literal that travels through a parameter is now typed
+`LocalizedStringKey`.
 
 ## Accessibility and layout
 

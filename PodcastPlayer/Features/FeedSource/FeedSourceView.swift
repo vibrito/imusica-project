@@ -127,14 +127,21 @@ struct FeedSourceView: View {
 
                 Button(action: submit) {
                     if viewModel.state.isLoading {
-                        ProgressView().controlSize(.small)
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(viewModel.canSubmit ? .white : .secondary)
                     } else {
                         Image(systemName: "arrow.right")
                             .font(.body.weight(.semibold))
+                            // Stated explicitly: on the tinted fill the glyph
+                            // would otherwise inherit the label colour and
+                            // disappear into the accent.
+                            .foregroundStyle(viewModel.canSubmit ? AnyShapeStyle(.white)
+                                                                 : AnyShapeStyle(.secondary))
                     }
                 }
                 .frame(width: 48, height: 48)
-                .glassCircle(tinted: true)
+                .glassCircle(tinted: viewModel.canSubmit)
                 .disabled(!viewModel.canSubmit)
                 .accessibilityLabel("Load podcast")
                 .accessibilityIdentifier("feed.submitButton")
@@ -270,7 +277,7 @@ struct FeedSourceView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(sample.name)
                                 .font(.body.weight(.medium))
-                            Text(sample.detail)
+                            Text(LocalizedStringKey(sample.detail))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -287,7 +294,8 @@ struct FeedSourceView: View {
                 .buttonStyle(.plain)
                 .glassCard(cornerRadius: 16)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(sample.name), \(sample.detail)")
+                .accessibilityLabel(Text(verbatim: sample.name) + Text(verbatim: ", ")
+                                    + Text(LocalizedStringKey(sample.detail)))
                 .accessibilityHint("Loads this podcast")
                 .accessibilityIdentifier("feed.sample.\(sample.name)")
             }

@@ -13,16 +13,25 @@ struct AsyncCachedImage: View {
     @State private var didFinish = false
 
     var body: some View {
-        Group {
-            if let data, let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } else {
-                placeholder
+        // Color.clear takes exactly the frame the caller gives, and the artwork
+        // rides in an overlay that is clipped to it.
+        //
+        // The obvious spelling — image, then aspectRatio(.fill), then
+        // clipShape — clips against the size proposed at that point, which is
+        // not the caller's frame, because the frame is applied afterwards. A
+        // filled image then draws well outside its layout slot and spills past
+        // the card it is supposed to sit inside.
+        Color.clear
+            .overlay {
+                if let data, let image = UIImage(data: data) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    placeholder
+                }
             }
-        }
-        .clipShape(.rect(cornerRadius: cornerRadius))
+            .clipShape(.rect(cornerRadius: cornerRadius))
         // Artwork is decorative; the surrounding row already carries the title.
         .accessibilityHidden(true)
         .task(id: url) { await load() }

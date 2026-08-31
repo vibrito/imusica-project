@@ -22,7 +22,7 @@ final class SettingsViewModel {
 
     var feedCacheText: String { Formatters.feedCount(statistics.cachedFeedCount) }
     var imageCacheText: String { Formatters.byteCount(statistics.imageCacheBytes) }
-    var historyText: String { historyCount == 1 ? "1 address" : "\(historyCount) addresses" }
+    var historyText: String { Formatters.addressCount(historyCount) }
 
     var hasFeedCache: Bool { statistics.cachedFeedCount > 0 }
     var hasImageCache: Bool { statistics.imageCacheBytes > 0 }

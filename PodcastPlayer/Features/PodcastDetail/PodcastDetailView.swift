@@ -65,7 +65,7 @@ struct PodcastDetailView: View {
                             .accessibilityIdentifier("detail.genre")
                     }
 
-                    Text("\(podcast.episodes.count) episodes")
+                    Text(Formatters.episodeCount(podcast.episodes.count))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

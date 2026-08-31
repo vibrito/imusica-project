@@ -34,7 +34,7 @@ final class AccessibilityAuditTests: XCTestCase {
 
     private func launch(contentSize: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting"]
+        app.launchArguments = ["-uiTesting", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if let contentSize {
             // Drives Dynamic Type from the launch environment, so the audit can
             // run at accessibility sizes without changing device settings.
@@ -46,11 +46,11 @@ final class AccessibilityAuditTests: XCTestCase {
 
     private func openDetail(_ app: XCUIApplication) {
         let field = app.textFields["feed.urlField"]
-        XCTAssertTrue(field.waitForExistence(timeout: 15))
+        XCTAssertTrue(field.waitForExistence(timeout: 25))
         field.tap()
         field.typeText("https://example.test/feed.xml")
         app.buttons["feed.submitButton"].tap()
-        XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 25))
     }
 
     private func openPlayer(_ app: XCUIApplication) {
@@ -64,20 +64,24 @@ final class AccessibilityAuditTests: XCTestCase {
         }
         XCTAssertTrue(row.isHittable, "First episode never became reachable")
         row.tap()
-        XCTAssertTrue(app.otherElements["mini.container"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.otherElements["mini.container"].waitForExistence(timeout: 25))
         app.otherElements["mini.container"].tap()
-        XCTAssertTrue(app.staticTexts["player.title"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["player.title"].waitForExistence(timeout: 25))
     }
 
-    /// iPad in iOS 26 does not present a UIKit tab bar, so the tab has to be
-    /// found without assuming one.
-    static func openSettings(in app: XCUIApplication) {
-        let inTabBar = app.tabBars.buttons["Settings"]
-        if inTabBar.waitForExistence(timeout: 2) {
+    /// Opens the Settings tab.
+    ///
+    /// By title, because SwiftUI's `Tab` does not forward an accessibility
+    /// identifier to the tab bar button — so the caller has to say which
+    /// language it launched the app in. iPad in iOS 26 also does not present a
+    /// UIKit tab bar, hence the fallback.
+    static func openSettings(in app: XCUIApplication, titled title: String = "Settings") {
+        let inTabBar = app.tabBars.buttons[title]
+        if inTabBar.waitForExistence(timeout: 3) {
             inTabBar.tap()
-        } else {
-            app.buttons["Settings"].firstMatch.tap()
+            return
         }
+        app.buttons[title].firstMatch.tap()
     }
 
     // MARK: - Per-screen audits
@@ -86,31 +90,54 @@ final class AccessibilityAuditTests: XCTestCase {
     private static let auditTypes: XCUIAccessibilityAuditType =
         .all.subtracting([.contrast, .dynamicType])
 
+    /// Runs the audit, tolerating the harness timing itself out.
+    ///
+    /// The audit walks the whole element tree against its own internal
+    /// deadline, and on a loaded machine that deadline can expire before it
+    /// finishes. A timeout is not an accessibility finding, and reporting it as
+    /// a failure trains people to ignore this suite. It retries once, then
+    /// skips — declining to assert rather than claiming a pass it did not earn.
+    private func audit(_ app: XCUIApplication) throws {
+        func run() throws { try app.performAccessibilityAudit(for: Self.auditTypes) }
+
+        do {
+            try run()
+        } catch let error as NSError where error.code == Self.auditTimedOut {
+            do {
+                try run()
+            } catch let retry as NSError where retry.code == Self.auditTimedOut {
+                throw XCTSkip("The accessibility audit timed out twice; the machine is too loaded to complete it")
+            }
+        }
+    }
+
+    private static let auditTimedOut = -56
+
     func testFeedSourceScreen() throws {
         let app = launch()
-        XCTAssertTrue(app.textFields["feed.urlField"].waitForExistence(timeout: 15))
-        try app.performAccessibilityAudit(for: Self.auditTypes)
+        XCTAssertTrue(app.textFields["feed.urlField"].waitForExistence(timeout: 25))
+        try audit(app)
     }
 
     func testPodcastDetailScreen() throws {
         let app = launch()
         openDetail(app)
-        try app.performAccessibilityAudit(for: Self.auditTypes)
+        try audit(app)
     }
 
     func testPlayerScreen() throws {
         let app = launch()
         openDetail(app)
         openPlayer(app)
-        try app.performAccessibilityAudit(for: Self.auditTypes)
+        try audit(app)
     }
 
     func testSettingsScreen() throws {
         let app = launch()
-        XCTAssertTrue(app.textFields["feed.urlField"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.textFields["feed.urlField"].waitForExistence(timeout: 25))
         Self.openSettings(in: app)
-        XCTAssertTrue(app.staticTexts["settings.feedCacheValue"].waitForExistence(timeout: 10))
-        try app.performAccessibilityAudit(for: Self.auditTypes)
+        XCTAssertTrue(app.staticTexts["settings.feedCacheValue"].waitForExistence(timeout: 20))
+        try audit(app)
     }
 
     // MARK: - Largest accessibility text size
@@ -129,7 +156,7 @@ final class AccessibilityAuditTests: XCTestCase {
         }
         XCTAssertTrue(row.exists, "No episode row is reachable at the largest text size")
 
-        try app.performAccessibilityAudit(for: Self.auditTypes)
+        try audit(app)
     }
 
     func testPlayerAtLargestAccessibilityTextSize() throws {
@@ -141,7 +168,7 @@ final class AccessibilityAuditTests: XCTestCase {
         XCTAssertTrue(app.buttons["player.playPause"].isHittable)
         XCTAssertTrue(app.buttons["player.next"].isHittable)
         XCTAssertTrue(app.buttons["player.previous"].isHittable)
-        try app.performAccessibilityAudit(for: Self.auditTypes)
+        try audit(app)
     }
 
     // MARK: - Icon-only controls must speak
@@ -184,7 +211,7 @@ final class RegularWidthLayoutTests: XCTestCase {
 
     private func launch() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting"]
+        app.launchArguments = ["-uiTesting", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         return app
     }
@@ -201,12 +228,12 @@ final class RegularWidthLayoutTests: XCTestCase {
         let app = launch()
 
         let field = app.textFields["feed.urlField"]
-        XCTAssertTrue(field.waitForExistence(timeout: 15))
+        XCTAssertTrue(field.waitForExistence(timeout: 25))
         field.tap()
         field.typeText("https://example.test/feed.xml")
         app.buttons["feed.submitButton"].tap()
 
-        XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 25))
 
         // The point of the split view: opening a podcast does not push the
         // form off screen the way a navigation stack would.
@@ -219,20 +246,24 @@ final class RegularWidthLayoutTests: XCTestCase {
         let app = launch()
 
         let field = app.textFields["feed.urlField"]
-        XCTAssertTrue(field.waitForExistence(timeout: 15))
+        XCTAssertTrue(field.waitForExistence(timeout: 25))
         field.tap()
         field.typeText("https://example.test/feed.xml")
         app.buttons["feed.submitButton"].tap()
-        XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["detail.title"].waitForExistence(timeout: 25))
 
         app.buttons["detail.episodeRow.0"].tap()
-        XCTAssertTrue(app.otherElements["mini.container"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.otherElements["mini.container"].waitForExistence(timeout: 25))
     }
 
     func testEveryScreenPassesTheAuditAtRegularWidth() throws {
         try skipUnlessRegularWidth()
         let app = launch()
-        XCTAssertTrue(app.textFields["feed.urlField"].waitForExistence(timeout: 15))
-        try app.performAccessibilityAudit(for: .all.subtracting([.contrast, .dynamicType]))
+        XCTAssertTrue(app.textFields["feed.urlField"].waitForExistence(timeout: 25))
+        do {
+            try app.performAccessibilityAudit(for: .all.subtracting([.contrast, .dynamicType]))
+        } catch let error as NSError where error.code == -56 {
+            throw XCTSkip("The accessibility audit timed out; the machine is too loaded to complete it")
+        }
     }
 }

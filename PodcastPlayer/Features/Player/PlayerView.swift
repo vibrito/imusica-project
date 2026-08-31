@@ -144,7 +144,7 @@ struct PlayerView: View {
 
     private func transportButton(
         _ symbol: String,
-        label: String,
+        label: LocalizedStringKey,
         identifier: String,
         enabled: Bool,
         action: @escaping () -> Void

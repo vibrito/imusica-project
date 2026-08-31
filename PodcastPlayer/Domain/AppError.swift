@@ -37,39 +37,41 @@ enum AppError: Error, Equatable, Sendable, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            "That doesn't look like a valid address"
+            String(localized: "That doesn't look like a valid address")
         case .offline:
-            "You're offline"
+            String(localized: "You're offline")
         case .network(let statusCode):
-            statusCode.map { "The server responded with an error (\($0))" }
-                ?? "Couldn't reach the server"
+            statusCode.map { String(localized: "The server responded with an error (\($0))") }
+                ?? String(localized: "Couldn't reach the server")
         case .notFound:
-            "No feed at that address"
+            String(localized: "No feed at that address")
         case .invalidFeed:
-            "That isn't a podcast feed"
+            String(localized: "That isn't a podcast feed")
         case .noEpisodes:
-            "This podcast has no episodes yet"
+            String(localized: "This podcast has no episodes yet")
         case .playbackFailed:
-            "Couldn't play this episode"
+            String(localized: "Couldn't play this episode")
         }
     }
 
     var recoverySuggestion: String? {
         switch self {
         case .invalidURL:
-            "Check the address and try again. It should look like https://example.com/feed.xml"
+            String(localized: "Check the address and try again. It should look like https://example.com/feed.xml")
         case .offline:
-            "Check your connection and try again."
+            String(localized: "Check your connection and try again.")
         case .network:
-            "The podcast host may be having trouble. Try again in a moment."
+            String(localized: "The podcast host may be having trouble. Try again in a moment.")
         case .notFound:
-            "Double-check the address, or try one of the sample feeds."
+            String(localized: "Double-check the address, or try one of the sample feeds.")
         case .invalidFeed(let reason):
-            "The address returned something we couldn't read (\(reason))."
+            // The reason comes from the XML parser and stays untranslated; it
+            // is diagnostic detail, not prose.
+            String(localized: "The address returned something we couldn't read (\(reason)).")
         case .noEpisodes:
-            "Check back once the publisher releases an episode."
+            String(localized: "Check back once the publisher releases an episode.")
         case .playbackFailed:
-            "The audio file may be unavailable. Try another episode."
+            String(localized: "The audio file may be unavailable. Try another episode.")
         }
     }
 }

@@ -6,16 +6,20 @@ enum Formatters {
 
     /// Episode length for a list row: "1h 2m", "42m", "—".
     static func duration(_ seconds: TimeInterval?) -> String {
-        guard let seconds, seconds.isFinite, seconds >= 0 else { return "—" }
+        guard let seconds, seconds.isFinite, seconds >= 0 else {
+            return String(localized: "—", comment: "Shown when an episode declares no duration")
+        }
 
         let total = Int(seconds.rounded())
         let hours = total / 3600
         let minutes = (total % 3600) / 60
 
         if hours > 0 {
-            return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
+            return minutes > 0
+                ? String(localized: "\(hours)h \(minutes)m")
+                : String(localized: "\(hours)h")
         }
-        return "\(minutes)m"
+        return String(localized: "\(minutes)m")
     }
 
     /// Transport timecode: "42:30", or "01:02:03" once past an hour.
@@ -34,7 +38,7 @@ enum Formatters {
 
     /// Time remaining, as the transport shows it: "-07:30".
     static func remaining(elapsed: TimeInterval, duration: TimeInterval) -> String {
-        guard duration > 0 else { return "--:--" }
+        guard duration > 0 else { return "--:--" }   // punctuation, not prose
         return "-" + timecode(max(0, duration - elapsed))
     }
 
@@ -55,22 +59,33 @@ enum Formatters {
         ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
     }
 
-    /// "1 feed" / "3 feeds" — a plural that reads correctly at one.
+    /// Plural rules differ by language, so these come from the string
+    /// catalogue rather than a ternary.
     static func feedCount(_ count: Int) -> String {
-        count == 1 ? "1 feed" : "\(count) feeds"
+        String(localized: "\(count) feeds")
+    }
+
+    static func addressCount(_ count: Int) -> String {
+        String(localized: "\(count) addresses")
+    }
+
+    static func episodeCount(_ count: Int) -> String {
+        String(localized: "\(count) episodes")
     }
 
     /// Spoken form for VoiceOver, where "42:30" is read as a time of day.
     static func spokenDuration(_ seconds: TimeInterval) -> String {
-        guard seconds.isFinite, seconds > 0 else { return "unknown length" }
+        guard seconds.isFinite, seconds > 0 else { return String(localized: "unknown length") }
 
         let total = Int(seconds.rounded())
         let hours = total / 3600
         let minutes = (total % 3600) / 60
 
         var parts: [String] = []
-        if hours > 0 { parts.append("\(hours) hour\(hours == 1 ? "" : "s")") }
-        if minutes > 0 { parts.append("\(minutes) minute\(minutes == 1 ? "" : "s")") }
-        return parts.isEmpty ? "less than a minute" : parts.joined(separator: " ")
+        if hours > 0 { parts.append(String(localized: "\(hours) hours")) }
+        if minutes > 0 { parts.append(String(localized: "\(minutes) minutes")) }
+        return parts.isEmpty
+            ? String(localized: "less than a minute")
+            : parts.joined(separator: " ")
     }
 }

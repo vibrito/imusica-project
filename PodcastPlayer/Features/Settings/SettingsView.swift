@@ -13,7 +13,7 @@ struct SettingsView: View {
         case feeds, images, history
         var id: String { rawValue }
 
-        var title: String {
+        var title: LocalizedStringKey {
             switch self {
             case .feeds: "Clear podcast cache?"
             case .images: "Clear image cache?"
@@ -21,7 +21,7 @@ struct SettingsView: View {
             }
         }
 
-        var message: String {
+        var message: LocalizedStringKey {
             switch self {
             case .feeds: "Podcasts will be downloaded again next time you open them."
             case .images: "Artwork will be downloaded again as you browse."
@@ -59,13 +59,13 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .task { await viewModel.refresh() }
-        .confirmationDialog(
-            pendingAction?.title ?? "",
+        .alert(
+            pendingAction?.title ?? LocalizedStringKey(""),
             isPresented: Binding(get: { pendingAction != nil },
                                  set: { if !$0 { pendingAction = nil } }),
-            titleVisibility: .visible,
             presenting: pendingAction
         ) { action in
+            Button("Cancel", role: .cancel) {}
             Button("Clear", role: .destructive) {
                 Task {
                     switch action {
@@ -75,14 +75,15 @@ struct SettingsView: View {
                     }
                 }
             }
-            Button("Cancel", role: .cancel) {}
         } message: { action in
             Text(action.message)
         }
     }
 
     private func row(
-        label: String,
+        // LocalizedStringKey, not String: Text(String) uses the non-localizing
+        // initializer and would ship these untranslated.
+        label: LocalizedStringKey,
         value: String,
         valueIdentifier: String,
         buttonIdentifier: String,
